@@ -1,28 +1,30 @@
 package me.kcybulski.nexum.eventstore.inmemory
 
 import me.kcybulski.nexum.eventstore.handlers.HandlersRepository
+import me.kcybulski.nexum.eventstore.subscribing.AllTypesHandler
+import me.kcybulski.nexum.eventstore.subscribing.EventHandler
+import me.kcybulski.nexum.eventstore.subscribing.EventTypeHandler
+import kotlin.reflect.KClass
 
 internal class InMemoryHandlersRepository : HandlersRepository {
 
-    private val handlers: MutableList<InMemoryHandler<*>> = mutableListOf()
+    private val handlers: MutableList<EventHandler<*>> = mutableListOf()
 
-    override fun <T> findHandlers(event: T): List<(T) -> Unit> =
+    override fun <T: Any> findHandlers(event: KClass<T>): List<(T: Any) -> Unit> =
         handlers
-            .filter { it.eventType == event!!::class.java }
-            .map { it.handler as (T) -> Unit }
+            .filter { it.accepting(event) }
+            .map { it.handler as (Any) -> Unit }
 
-    override fun <T> register(event: Class<out T>, handler: (T) -> Unit) {
-        handlers += InMemoryHandler(event, handler)
+    override fun <T> register(handler: EventHandler<T>): EventHandler<T> {
+        handlers += handler
+        return handler
     }
 
-    override fun <T> unregister(event: Class<out T>, handler: (T) -> Unit) {
-        handlers -= InMemoryHandler(event, handler)
+    override fun <T> unregister(handler: EventHandler<T>) {
+        handlers -= handler
     }
 
     override fun unregisterAll() {
         handlers.clear()
     }
 }
-
-
-data class InMemoryHandler<T>(val eventType: Class<T>, val handler: (T) -> Unit)

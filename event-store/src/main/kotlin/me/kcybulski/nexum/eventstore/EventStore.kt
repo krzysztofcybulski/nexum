@@ -10,27 +10,34 @@ import me.kcybulski.nexum.eventstore.handlers.HandlersRepository
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfigurationBuilder
 import me.kcybulski.nexum.eventstore.publishing.PublishingError
 import me.kcybulski.nexum.eventstore.publishing.PublishingUncheckedException
+import me.kcybulski.nexum.eventstore.subscribing.AllTypesHandler
 import me.kcybulski.nexum.eventstore.subscribing.BasicSubscription
+import me.kcybulski.nexum.eventstore.subscribing.EventHandler
+import me.kcybulski.nexum.eventstore.subscribing.EventTypeHandler
 import me.kcybulski.nexum.eventstore.subscribing.Subscription
+import kotlin.reflect.KClass
 
 class EventStore(
     private val handlersRepository: HandlersRepository,
     private val eventsManager: EventsFacade,
     private val aggregatesHolder: AggregatesHolder,
 ) {
-    fun <T> subscribe(event: Class<out T>, handler: (T) -> Unit): Subscription<T> {
-        handlersRepository.register(event, handler)
-        return BasicSubscription(event, handler, this)
-    }
+    fun <T : Any> subscribe(event: KClass<T>, handler: (T) -> Unit): Subscription<T> = EventTypeHandler(event, handler)
+        .let(handlersRepository::register)
+        .let { BasicSubscription(it, this) }
 
-    fun <T> publish(
+    fun subscribeAll(handler: (Any) -> Unit): Subscription<Any> = AllTypesHandler(handler)
+        .let(handlersRepository::register)
+        .let { BasicSubscription(it, this) }
+
+    fun <T : Any> publish(
         event: T,
         stream: Stream = NoStream,
         configuration: PublishEventConfigurationBuilder.() -> Unit = {}
     ) {
         val config = PublishEventConfigurationBuilder().also(configuration).build()
         eventsManager.save(event, stream)
-        handlersRepository.findHandlers(event)
+        handlersRepository.findHandlers(event::class)
             .forEach { handler -> event.tryOrElse(handler) { config.errorHandler(it) } }
     }
 
@@ -38,8 +45,8 @@ class EventStore(
         eventsManager.save(event, stream)
     }
 
-    fun <T> unsubscribe(event: Class<out T>, handler: (T) -> Unit) {
-        handlersRepository.unregister(event, handler)
+    fun <T> unsubscribe(handler: EventHandler<T>) {
+        handlersRepository.unregister(handler)
     }
 
     fun <T : AggregateRoot<T>> load(stream: Stream, factory: (AggregatesHolder) -> T): T =
@@ -53,7 +60,7 @@ class EventStore(
 
 }
 
-private fun <T> T.tryOrElse(func: (T) -> Unit, errorHandler: (PublishingError) -> Unit) = try {
+private fun <T: Any> T.tryOrElse(func: (T) -> Unit, errorHandler: (PublishingError) -> Unit) = try {
     func(this)
 } catch (e: RuntimeException) {
     errorHandler(PublishingUncheckedException(e))

@@ -11,7 +11,7 @@ class EventPublishingSpec : BehaviorSpec({
     val testSubscriber = TestSubscriber()
     val eventStore: EventStore = InMemoryEventStore.create()
 
-    eventStore.subscribe(ProductAddedEvent::class.java, testSubscriber::onEvent)
+    eventStore.subscribe(ProductAddedEvent::class, testSubscriber::onEvent)
 
     afterTest {
         testSubscriber.reset()
