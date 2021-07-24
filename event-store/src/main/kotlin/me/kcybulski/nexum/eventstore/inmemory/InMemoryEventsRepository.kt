@@ -1,8 +1,8 @@
 package me.kcybulski.nexum.eventstore.inmemory
 
-import me.kcybulski.nexum.eventstore.DomainEvent
-import me.kcybulski.nexum.eventstore.EventsRepository
-import me.kcybulski.nexum.eventstore.Stream
+import me.kcybulski.nexum.eventstore.events.EventsRepository
+import me.kcybulski.nexum.eventstore.events.DomainEvent
+import me.kcybulski.nexum.eventstore.events.Stream
 
 internal class InMemoryEventsRepository : EventsRepository {
 

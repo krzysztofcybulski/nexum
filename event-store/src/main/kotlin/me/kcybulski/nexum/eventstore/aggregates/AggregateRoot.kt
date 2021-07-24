@@ -1,9 +1,8 @@
 package me.kcybulski.nexum.eventstore.aggregates
 
-import me.kcybulski.nexum.eventstore.Stream
-import me.kcybulski.nexum.eventstore.StreamId
+import me.kcybulski.nexum.eventstore.events.Stream
 
-interface AggregateRoot<A: AggregateRoot<A>> {
+interface AggregateRoot<A : AggregateRoot<A>> {
 
     val aggregatesHolder: AggregatesHolder
 

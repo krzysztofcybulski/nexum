@@ -2,6 +2,10 @@ package me.kcybulski.nexum.eventstore
 
 import me.kcybulski.nexum.eventstore.aggregates.AggregateRoot
 import me.kcybulski.nexum.eventstore.aggregates.AggregatesHolder
+import me.kcybulski.nexum.eventstore.events.DomainEvent
+import me.kcybulski.nexum.eventstore.events.EventsFacade
+import me.kcybulski.nexum.eventstore.events.Stream
+import me.kcybulski.nexum.eventstore.handlers.HandlersRepository
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfigurationBuilder
 import me.kcybulski.nexum.eventstore.publishing.PublishingError
 import me.kcybulski.nexum.eventstore.publishing.PublishingUncheckedException
@@ -10,8 +14,8 @@ import me.kcybulski.nexum.eventstore.subscribing.Subscription
 
 class EventStore(
     private val handlersRepository: HandlersRepository,
-    private val eventsRepository: EventsRepository,
-    private val aggregatesHolder: AggregatesHolder
+    private val eventsManager: EventsFacade,
+    private val aggregatesHolder: AggregatesHolder,
 ) {
     fun <T> subscribe(event: Class<out T>, handler: (T) -> Unit): Subscription<T> {
         handlersRepository.register(event, handler)
@@ -29,7 +33,7 @@ class EventStore(
     }
 
     fun <T : AggregateRoot<T>> load(stream: Stream, factory: (AggregatesHolder) -> T): T =
-        factory(aggregatesHolder).applyAllEvents(eventsRepository.loadStream(stream))
+        factory(aggregatesHolder).applyAllEvents(eventsManager.loadStream(stream))
 
     fun <T : AggregateRoot<T>> new(factory: (AggregatesHolder) -> T): T = factory(aggregatesHolder)
 

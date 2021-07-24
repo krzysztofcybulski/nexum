@@ -3,10 +3,10 @@ package me.kcybulski.nexum.eventstore.spec
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldBeIn
 import me.kcybulski.nexum.eventstore.EventStore
-import me.kcybulski.nexum.eventstore.StreamId
 import me.kcybulski.nexum.eventstore.TestSubscriber
 import me.kcybulski.nexum.eventstore.data.OrderAggregate
 import me.kcybulski.nexum.eventstore.data.ProductAddedEvent
+import me.kcybulski.nexum.eventstore.events.StreamId
 import me.kcybulski.nexum.eventstore.inmemory.InMemoryEventStore
 
 class AggregateSpec : BehaviorSpec({

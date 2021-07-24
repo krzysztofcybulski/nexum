@@ -1,6 +1,6 @@
 package me.kcybulski.nexum.eventstore.inmemory
 
-import me.kcybulski.nexum.eventstore.HandlersRepository
+import me.kcybulski.nexum.eventstore.handlers.HandlersRepository
 
 internal class InMemoryHandlersRepository : HandlersRepository {
 

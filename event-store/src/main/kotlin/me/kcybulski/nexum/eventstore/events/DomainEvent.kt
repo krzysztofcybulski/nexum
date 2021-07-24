@@ -1,4 +1,4 @@
-package me.kcybulski.nexum.eventstore
+package me.kcybulski.nexum.eventstore.events
 
 import java.time.Instant
 

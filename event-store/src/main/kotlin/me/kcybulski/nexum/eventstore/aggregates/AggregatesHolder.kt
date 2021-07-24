@@ -1,6 +1,6 @@
 package me.kcybulski.nexum.eventstore.aggregates
 
-import me.kcybulski.nexum.eventstore.Stream
+import me.kcybulski.nexum.eventstore.events.Stream
 
 interface AggregatesHolder {
 
