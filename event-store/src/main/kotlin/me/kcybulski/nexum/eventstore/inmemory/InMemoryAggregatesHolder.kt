@@ -5,6 +5,7 @@ import me.kcybulski.nexum.eventstore.aggregates.AggregatesHolder
 import me.kcybulski.nexum.eventstore.DomainEvent
 import me.kcybulski.nexum.eventstore.aggregates.EventToPersist
 import me.kcybulski.nexum.eventstore.EventsRepository
+import me.kcybulski.nexum.eventstore.Stream
 import java.time.Clock
 
 class InMemoryAggregatesHolder(
@@ -18,14 +19,14 @@ class InMemoryAggregatesHolder(
         events.merge(aggregate, listOf(EventToPersist(event))) { a, b -> a + b }
     }
 
-    override fun <T : AggregateRoot<*>> store(aggregate: T, stream: String): T {
+    override fun <T : AggregateRoot<*>> store(aggregate: T, stream: Stream): T {
         (events.remove(aggregate) ?: emptyList())
             .map { domainEvent(it, stream) }
             .forEach { eventsRepository.save(it) }
         return aggregate
     }
 
-    private fun <T> domainEvent(eventToPersist: EventToPersist<T>, stream: String): DomainEvent<T> =
+    private fun <T> domainEvent(eventToPersist: EventToPersist<T>, stream: Stream): DomainEvent<T> =
         DomainEvent(
             payload = eventToPersist.payload,
             stream = stream,

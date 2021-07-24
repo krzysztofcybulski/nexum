@@ -3,6 +3,7 @@ package me.kcybulski.nexum.eventstore.spec
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldBeIn
 import me.kcybulski.nexum.eventstore.EventStore
+import me.kcybulski.nexum.eventstore.StreamId
 import me.kcybulski.nexum.eventstore.TestSubscriber
 import me.kcybulski.nexum.eventstore.data.OrderAggregate
 import me.kcybulski.nexum.eventstore.data.ProductAddedEvent
@@ -20,11 +21,12 @@ class AggregateSpec : BehaviorSpec({
     }
 
     given("Stored order with milk") {
+        val stream = StreamId("order-with-milk")
         eventStore.new(::OrderAggregate)
             .also { it.addProduct("Milk") }
-            .store("order-with-milk")
+            .store(stream)
         `when`("Loaded order") {
-            val orderWithMilk = eventStore.load("order-with-milk", ::OrderAggregate)
+            val orderWithMilk = eventStore.load(stream, ::OrderAggregate)
             then("Milk has been added") {
                 "Milk" shouldBeIn orderWithMilk.products
             }

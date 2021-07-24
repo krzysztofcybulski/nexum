@@ -1,5 +1,8 @@
 package me.kcybulski.nexum.eventstore.aggregates
 
+import me.kcybulski.nexum.eventstore.Stream
+import me.kcybulski.nexum.eventstore.StreamId
+
 interface AggregateRoot<A: AggregateRoot<A>> {
 
     val aggregatesHolder: AggregatesHolder
@@ -11,7 +14,7 @@ interface AggregateRoot<A: AggregateRoot<A>> {
         apply(event)
     }
 
-    fun store(stream: String) {
+    fun store(stream: Stream) {
         aggregatesHolder.store(this, stream)
     }
 }

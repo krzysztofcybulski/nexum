@@ -28,7 +28,7 @@ class EventStore(
         handlersRepository.unregister(event, handler)
     }
 
-    fun <T : AggregateRoot<T>> load(stream: String, factory: (AggregatesHolder) -> T): T =
+    fun <T : AggregateRoot<T>> load(stream: Stream, factory: (AggregatesHolder) -> T): T =
         factory(aggregatesHolder).applyAllEvents(eventsRepository.loadStream(stream))
 
     fun <T : AggregateRoot<T>> new(factory: (AggregatesHolder) -> T): T = factory(aggregatesHolder)
