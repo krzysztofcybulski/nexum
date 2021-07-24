@@ -8,5 +8,4 @@ object InMemoryEventStore {
         InMemoryHandlersRepository(),
         InMemoryEventsRepository()
     )
-
 }

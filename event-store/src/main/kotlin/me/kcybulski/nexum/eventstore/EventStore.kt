@@ -1,8 +1,11 @@
 package me.kcybulski.nexum.eventstore
 
+import java.time.Clock
+
 class EventStore(
     private val handlersRepository: HandlersRepository,
-    private val eventsRepository: EventsRepository
+    private val eventsRepository: EventsRepository,
+    private val clock: Clock = Clock.systemUTC()
 ) {
     fun <T> subscribe(event: Class<out T>, handler: (T) -> Unit): Subscription<T> {
         handlersRepository.register(event, handler)
@@ -20,9 +23,17 @@ class EventStore(
     }
 
     fun <T : AggregateRoot> store(aggregate: T, stream: String) {
-        aggregate.events.forEach { eventsRepository.save(DomainEvent(it.payload, stream)) }
+        aggregate.events
+            .map { domainEvent(it, stream) }
+            .forEach { eventsRepository.save(it) }
         aggregate.events.clear()
     }
+
+    private fun <T> domainEvent(eventToPersist: EventToPersist<T>, stream: String): DomainEvent<T> = DomainEvent(
+        payload = eventToPersist.payload,
+        stream = stream,
+        timestamp = clock.instant()
+    )
 
     fun <T : AggregateRoot> load(stream: String, factory: (EventStore) -> T): T =
         factory(this).applyAllEvents(eventsRepository.loadStream(stream))
