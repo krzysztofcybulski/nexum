@@ -1,5 +1,13 @@
 package me.kcybulski.nexum.eventstore
 
+import me.kcybulski.nexum.eventstore.aggregates.AggregateRoot
+import me.kcybulski.nexum.eventstore.aggregates.AggregatesHolder
+import me.kcybulski.nexum.eventstore.publishing.PublishEventConfigurationBuilder
+import me.kcybulski.nexum.eventstore.publishing.PublishingError
+import me.kcybulski.nexum.eventstore.publishing.PublishingUncheckedException
+import me.kcybulski.nexum.eventstore.subscribing.BasicSubscription
+import me.kcybulski.nexum.eventstore.subscribing.Subscription
+
 class EventStore(
     private val handlersRepository: HandlersRepository,
     private val eventsRepository: EventsRepository,

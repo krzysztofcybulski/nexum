@@ -1,4 +1,4 @@
-package me.kcybulski.nexum.eventstore
+package me.kcybulski.nexum.eventstore.aggregates
 
 interface AggregateRoot<A: AggregateRoot<A>> {
 

@@ -1,7 +1,7 @@
 package me.kcybulski.nexum.eventstore.data
 
-import me.kcybulski.nexum.eventstore.AggregateRoot
-import me.kcybulski.nexum.eventstore.AggregatesHolder
+import me.kcybulski.nexum.eventstore.aggregates.AggregateRoot
+import me.kcybulski.nexum.eventstore.aggregates.AggregatesHolder
 
 data class OrderAggregate(
     override val aggregatesHolder: AggregatesHolder,

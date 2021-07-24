@@ -1,4 +1,6 @@
-package me.kcybulski.nexum.eventstore
+package me.kcybulski.nexum.eventstore.subscribing
+
+import me.kcybulski.nexum.eventstore.EventStore
 
 internal class BasicSubscription<T>(
     private val event: Class<out T>,

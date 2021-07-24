@@ -1,9 +1,9 @@
 package me.kcybulski.nexum.eventstore.inmemory
 
-import me.kcybulski.nexum.eventstore.AggregateRoot
-import me.kcybulski.nexum.eventstore.AggregatesHolder
+import me.kcybulski.nexum.eventstore.aggregates.AggregateRoot
+import me.kcybulski.nexum.eventstore.aggregates.AggregatesHolder
 import me.kcybulski.nexum.eventstore.DomainEvent
-import me.kcybulski.nexum.eventstore.EventToPersist
+import me.kcybulski.nexum.eventstore.aggregates.EventToPersist
 import me.kcybulski.nexum.eventstore.EventsRepository
 import java.time.Clock
 

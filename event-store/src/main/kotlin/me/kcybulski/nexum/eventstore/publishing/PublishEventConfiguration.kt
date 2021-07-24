@@ -1,4 +1,5 @@
-package me.kcybulski.nexum.eventstore
+package me.kcybulski.nexum.eventstore.publishing
+
 
 data class PublishEventConfiguration(
     val errorHandler: (error: PublishingError) -> Unit
