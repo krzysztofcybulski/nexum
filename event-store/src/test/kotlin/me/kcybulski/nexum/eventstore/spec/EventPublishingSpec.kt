@@ -29,4 +29,16 @@ class EventPublishingSpec : BehaviorSpec({
             }
         }
     }
+
+    given("An event (2)") {
+        val event = ProductAddedEvent("Milk")
+        `when`("Event is appended") {
+            eventStore.append(event)
+            then("Subscriber has not been called") {
+                testSubscriber
+                    .assertStream(ProductAddedEvent::class.java)
+                    .andNoMore()
+            }
+        }
+    }
 })

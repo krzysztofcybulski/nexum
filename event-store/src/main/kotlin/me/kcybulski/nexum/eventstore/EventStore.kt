@@ -4,6 +4,7 @@ import me.kcybulski.nexum.eventstore.aggregates.AggregateRoot
 import me.kcybulski.nexum.eventstore.aggregates.AggregatesHolder
 import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.EventsFacade
+import me.kcybulski.nexum.eventstore.events.NoStream
 import me.kcybulski.nexum.eventstore.events.Stream
 import me.kcybulski.nexum.eventstore.handlers.HandlersRepository
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfigurationBuilder
@@ -22,10 +23,19 @@ class EventStore(
         return BasicSubscription(event, handler, this)
     }
 
-    fun <T> publish(event: T, configuration: PublishEventConfigurationBuilder.() -> Unit = {}) {
+    fun <T> publish(
+        event: T,
+        stream: Stream = NoStream,
+        configuration: PublishEventConfigurationBuilder.() -> Unit = {}
+    ) {
         val config = PublishEventConfigurationBuilder().also(configuration).build()
+        eventsManager.save(event, stream)
         handlersRepository.findHandlers(event)
             .forEach { handler -> event.tryOrElse(handler) { config.errorHandler(it) } }
+    }
+
+    fun <T> append(event: T, stream: Stream = NoStream) {
+        eventsManager.save(event, stream)
     }
 
     fun <T> unsubscribe(event: Class<out T>, handler: (T) -> Unit) {
