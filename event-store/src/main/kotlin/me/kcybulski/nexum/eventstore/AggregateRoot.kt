@@ -1,19 +1,17 @@
 package me.kcybulski.nexum.eventstore
 
-abstract class AggregateRoot(private val eventStore: EventStore) {
-    internal val events: MutableList<EventToPersist<*>> = mutableListOf()
+interface AggregateRoot<A: AggregateRoot<A>> {
+
+    val aggregatesHolder: AggregatesHolder
+
+    fun <T> apply(event: T): A
 
     fun <T> event(event: T) {
-        events.add(EventToPersist(event))
+        aggregatesHolder.addEvent(this, event)
         apply(event)
     }
 
-    abstract fun <T> apply(event: T)
-
     fun store(stream: String) {
-        eventStore.store(this, stream)
+        aggregatesHolder.store(this, stream)
     }
-
 }
-
-data class EventToPersist<T>(val payload: T)

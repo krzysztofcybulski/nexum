@@ -1,11 +1,9 @@
 package me.kcybulski.nexum.eventstore
 
-import java.time.Clock
-
 class EventStore(
     private val handlersRepository: HandlersRepository,
     private val eventsRepository: EventsRepository,
-    private val clock: Clock = Clock.systemUTC()
+    private val aggregatesHolder: AggregatesHolder
 ) {
     fun <T> subscribe(event: Class<out T>, handler: (T) -> Unit): Subscription<T> {
         handlersRepository.register(event, handler)
@@ -22,22 +20,10 @@ class EventStore(
         handlersRepository.unregister(event, handler)
     }
 
-    fun <T : AggregateRoot> store(aggregate: T, stream: String) {
-        aggregate.events
-            .map { domainEvent(it, stream) }
-            .forEach { eventsRepository.save(it) }
-        aggregate.events.clear()
-    }
+    fun <T : AggregateRoot<T>> load(stream: String, factory: (AggregatesHolder) -> T): T =
+        factory(aggregatesHolder).applyAllEvents(eventsRepository.loadStream(stream))
 
-    private fun <T> domainEvent(eventToPersist: EventToPersist<T>, stream: String): DomainEvent<T> =
-        DomainEvent(
-            payload = eventToPersist.payload,
-            stream = stream,
-            timestamp = clock.instant()
-        )
-
-    fun <T : AggregateRoot> load(stream: String, factory: (EventStore) -> T): T =
-        factory(this).applyAllEvents(eventsRepository.loadStream(stream))
+    fun <T : AggregateRoot<T>> new(factory: (AggregatesHolder) -> T): T = factory(aggregatesHolder)
 
     internal fun unsubscribeAll() {
         handlersRepository.unregisterAll()
@@ -51,7 +37,5 @@ private fun <T> T.tryOrElse(func: (T) -> Unit, errorHandler: (PublishingError) -
     errorHandler(PublishingUncheckedException(e))
 }
 
-private fun <T : AggregateRoot> T.applyAllEvents(events: List<DomainEvent<*>>): T {
-    events.forEach { apply(it.payload) }
-    return this
-}
+private fun <T : AggregateRoot<T>> T.applyAllEvents(events: List<DomainEvent<*>>): T =
+    events.fold(this) { agg, event -> agg.apply(event.payload) }

@@ -2,10 +2,10 @@ package me.kcybulski.nexum.eventstore.spec
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldBeIn
+import me.kcybulski.nexum.eventstore.EventStore
 import me.kcybulski.nexum.eventstore.TestSubscriber
 import me.kcybulski.nexum.eventstore.data.OrderAggregate
 import me.kcybulski.nexum.eventstore.data.ProductAddedEvent
-import me.kcybulski.nexum.eventstore.EventStore
 import me.kcybulski.nexum.eventstore.inmemory.InMemoryEventStore
 
 class AggregateSpec : BehaviorSpec({
@@ -19,22 +19,12 @@ class AggregateSpec : BehaviorSpec({
         testSubscriber.reset()
     }
 
-    given("New order") {
-        val order = OrderAggregate(eventStore)
-        `when`("Added milk product") {
-            order.addProduct("Milk")
-            then("Milk has been added") {
-                "Milk" shouldBeIn order.products
-            }
-        }
-    }
-
     given("Stored order with milk") {
-        OrderAggregate(eventStore)
+        eventStore.new(::OrderAggregate)
             .also { it.addProduct("Milk") }
             .store("order-with-milk")
         `when`("Loaded order") {
-            val orderWithMilk = eventStore.load("order-with-milk") { OrderAggregate(it) }
+            val orderWithMilk = eventStore.load("order-with-milk", ::OrderAggregate)
             then("Milk has been added") {
                 "Milk" shouldBeIn orderWithMilk.products
             }
