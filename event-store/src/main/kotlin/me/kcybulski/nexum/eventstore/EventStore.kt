@@ -33,60 +33,6 @@ class EventStore(
 
 }
 
-interface HandlersRepository {
-
-    fun <T> findHandlers(event: T): List<(T) -> Unit>
-    fun <T> register(event: Class<out T>, handler: (T) -> Unit)
-    fun <T> unregister(event: Class<out T>, handler: (T) -> Unit)
-    fun unregisterAll()
-
-}
-
-interface EventsRepository {
-
-    fun <T> save(event: DomainEvent<T>)
-    fun loadStream(stream: String): List<DomainEvent<*>>
-
-}
-
-class DomainEvent<T>(val payload: T, val stream: String)
-
-interface Subscription<T> {
-    fun unsubscribe()
-}
-
-internal class BasicSubscription<T>(
-    private val event: Class<out T>,
-    private val handler: (T) -> Unit,
-    private val eventStore: EventStore
-) : Subscription<T> {
-    override fun unsubscribe() {
-        eventStore.unsubscribe(event, handler)
-    }
-}
-
-interface PublishingError
-
-class PublishingUncheckedException(val exception: RuntimeException) : PublishingError
-
-class PublishEventConfigurationBuilder {
-
-    var errorHandler: (error: PublishingError) -> Unit = {}
-
-    fun onError(handler: (error: PublishingError) -> Unit) {
-        this.errorHandler = handler
-    }
-
-    fun build() = PublishEventConfiguration(
-        errorHandler = errorHandler
-    )
-
-}
-
-class PublishEventConfiguration(
-    val errorHandler: (error: PublishingError) -> Unit
-)
-
 private fun <T> T.tryOrElse(func: (T) -> Unit, errorHandler: (PublishingError) -> Unit) = try {
     func(this)
 } catch (e: RuntimeException) {
