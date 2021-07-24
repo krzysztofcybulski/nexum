@@ -29,11 +29,12 @@ class EventStore(
         aggregate.events.clear()
     }
 
-    private fun <T> domainEvent(eventToPersist: EventToPersist<T>, stream: String): DomainEvent<T> = DomainEvent(
-        payload = eventToPersist.payload,
-        stream = stream,
-        timestamp = clock.instant()
-    )
+    private fun <T> domainEvent(eventToPersist: EventToPersist<T>, stream: String): DomainEvent<T> =
+        DomainEvent(
+            payload = eventToPersist.payload,
+            stream = stream,
+            timestamp = clock.instant()
+        )
 
     fun <T : AggregateRoot> load(stream: String, factory: (EventStore) -> T): T =
         factory(this).applyAllEvents(eventsRepository.loadStream(stream))

@@ -1,7 +1,7 @@
-package me.kcybulski.nexum.data
+package me.kcybulski.nexum.eventstore.data
 
-import me.kcybulski.nexum.eventstore.AggregateRoot
 import me.kcybulski.nexum.eventstore.EventStore
+import me.kcybulski.nexum.eventstore.AggregateRoot
 
 class OrderAggregate(
     eventStore: EventStore,

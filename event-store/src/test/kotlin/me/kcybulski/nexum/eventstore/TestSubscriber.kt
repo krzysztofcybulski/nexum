@@ -1,6 +1,6 @@
-package me.kcybulski.nexum
+package me.kcybulski.nexum.eventstore
 
-import me.kcybulski.nexum.assertions.EventsStreamAssert
+import me.kcybulski.nexum.eventstore.assertions.EventsStreamAssert
 
 class TestSubscriber {
 

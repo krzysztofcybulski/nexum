@@ -1,9 +1,9 @@
-package me.kcybulski.nexum.spec
+package me.kcybulski.nexum.eventstore.spec
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import me.kcybulski.nexum.TestSubscriber
-import me.kcybulski.nexum.data.ProductAddedEvent
+import me.kcybulski.nexum.eventstore.TestSubscriber
+import me.kcybulski.nexum.eventstore.data.ProductAddedEvent
 import me.kcybulski.nexum.eventstore.inmemory.InMemoryEventStore
 
 class EventSubscribingSpec : BehaviorSpec({

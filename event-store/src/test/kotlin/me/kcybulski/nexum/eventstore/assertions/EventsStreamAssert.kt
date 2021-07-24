@@ -1,4 +1,4 @@
-package me.kcybulski.nexum.assertions
+package me.kcybulski.nexum.eventstore.assertions
 
 import io.kotest.matchers.shouldBe
 
