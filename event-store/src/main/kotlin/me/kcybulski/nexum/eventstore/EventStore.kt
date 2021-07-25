@@ -6,6 +6,7 @@ import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.EventsFacade
 import me.kcybulski.nexum.eventstore.events.NoStream
 import me.kcybulski.nexum.eventstore.events.Stream
+import me.kcybulski.nexum.eventstore.events.StreamId
 import me.kcybulski.nexum.eventstore.handlers.HandlersRepository
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfigurationBuilder
 import me.kcybulski.nexum.eventstore.publishing.PublishingError
@@ -49,7 +50,7 @@ class EventStore(
         handlersRepository.unregister(handler)
     }
 
-    fun <T : AggregateRoot<T>> load(stream: Stream, factory: (AggregatesHolder) -> T): T =
+    fun <T : AggregateRoot<T>> load(stream: StreamId, factory: (AggregatesHolder) -> T): T =
         factory(aggregatesHolder).applyAllEvents(eventsManager.loadStream(stream))
 
     fun <T : AggregateRoot<T>> new(factory: (AggregatesHolder) -> T): T = factory(aggregatesHolder)

@@ -3,6 +3,7 @@ package me.kcybulski.nexum.eventstore.inmemory
 import me.kcybulski.nexum.eventstore.events.EventsRepository
 import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.Stream
+import me.kcybulski.nexum.eventstore.events.StreamId
 
 internal class InMemoryEventsRepository : EventsRepository {
 
@@ -12,7 +13,7 @@ internal class InMemoryEventsRepository : EventsRepository {
         streams.merge(event.stream, mutableListOf(event)) { a, b -> a + b }
     }
 
-    override fun loadStream(stream: Stream): List<DomainEvent<*>> {
+    override fun loadStream(stream: StreamId): List<DomainEvent<*>> {
         return streams[stream] ?: emptyList()
     }
 }

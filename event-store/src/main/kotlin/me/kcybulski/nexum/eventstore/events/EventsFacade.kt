@@ -9,7 +9,6 @@ class EventsFacade(
         .create(payload, stream)
         .let(eventsRepository::save)
 
-    fun loadStream(stream: Stream): List<DomainEvent<*>> = eventsRepository
-        .loadStream(stream)
+    fun loadStream(stream: StreamId): List<DomainEvent<*>> = eventsRepository.loadStream(stream)
 
 }
