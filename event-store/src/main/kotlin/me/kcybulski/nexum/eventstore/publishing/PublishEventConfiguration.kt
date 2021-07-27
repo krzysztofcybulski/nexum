@@ -2,7 +2,15 @@ package me.kcybulski.nexum.eventstore.publishing
 
 data class PublishEventConfiguration(
     val errorHandler: (error: PublishingError) -> Unit
-)
+) {
+
+    companion object {
+        fun configuration(configuration: PublishEventConfigurationBuilder.() -> Unit = {}) =
+            PublishEventConfigurationBuilder()
+                .apply(configuration)
+                .build()
+    }
+}
 
 class PublishEventConfigurationBuilder {
 

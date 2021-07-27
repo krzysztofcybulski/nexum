@@ -8,6 +8,8 @@ import me.kcybulski.nexum.eventstore.events.NoStream
 import me.kcybulski.nexum.eventstore.events.Stream
 import me.kcybulski.nexum.eventstore.events.StreamId
 import me.kcybulski.nexum.eventstore.handlers.HandlersRepository
+import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration
+import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration.Companion.configuration
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfigurationBuilder
 import me.kcybulski.nexum.eventstore.publishing.PublishingError
 import me.kcybulski.nexum.eventstore.publishing.PublishingUncheckedException
@@ -34,12 +36,10 @@ class EventStore(
     fun <T : Any> publish(
         event: T,
         stream: Stream = NoStream,
-        configuration: PublishEventConfigurationBuilder.() -> Unit = {}
+        configurationBuilder: PublishEventConfigurationBuilder.() -> Unit = {}
     ) {
-        val config = PublishEventConfigurationBuilder().also(configuration).build()
-        eventsManager.save(event, stream)
-        handlersRepository.findHandlers(event::class)
-            .forEach { handler -> event.tryOrElse(handler) { config.errorHandler(it) } }
+        append(event, stream)
+        fireEventHandlers(event, configuration(configurationBuilder))
     }
 
     fun <T> append(event: T, stream: Stream = NoStream) {
@@ -55,13 +55,17 @@ class EventStore(
 
     fun <T : AggregateRoot<T>> new(factory: (AggregatesHolder) -> T): T = factory(aggregatesHolder)
 
+    private fun <T : Any> fireEventHandlers(event: T, configuration: PublishEventConfiguration) = handlersRepository
+        .findHandlers(event::class)
+        .forEach { handler -> event.tryOrElse(handler) { configuration.errorHandler(it) } }
+
     internal fun unsubscribeAll() {
         handlersRepository.unregisterAll()
     }
 
 }
 
-private fun <T: Any> T.tryOrElse(func: (T) -> Unit, errorHandler: (PublishingError) -> Unit) = try {
+private fun <T : Any> T.tryOrElse(func: (T) -> Unit, errorHandler: (PublishingError) -> Unit) = try {
     func(this)
 } catch (e: RuntimeException) {
     errorHandler(PublishingUncheckedException(e))
