@@ -1,5 +1,8 @@
 package me.kcybulski.nexum.eventstore.events
 
+import me.kcybulski.nexum.eventstore.reader.EventsQuery
+import java.util.stream.Stream as JavaStream
+
 class EventsFacade(
     private val eventsRepository: EventsRepository,
     private val eventsFactory: EventsFactory
@@ -9,6 +12,7 @@ class EventsFacade(
         .create(payload, stream)
         .let(eventsRepository::save)
 
-    fun loadStream(stream: StreamId): List<DomainEvent<*>> = eventsRepository.loadStream(stream)
+    fun read(query: EventsQuery): JavaStream<DomainEvent<*>> = eventsRepository
+        .query(query)
 
 }

@@ -1,9 +1,10 @@
 package me.kcybulski.nexum.eventstore.inmemory
 
-import me.kcybulski.nexum.eventstore.events.EventsRepository
 import me.kcybulski.nexum.eventstore.events.DomainEvent
+import me.kcybulski.nexum.eventstore.events.EventsRepository
 import me.kcybulski.nexum.eventstore.events.Stream
-import me.kcybulski.nexum.eventstore.events.StreamId
+import me.kcybulski.nexum.eventstore.reader.EventsQuery
+import java.util.stream.Stream as JavaStream
 
 internal class InMemoryEventsRepository : EventsRepository {
 
@@ -13,7 +14,9 @@ internal class InMemoryEventsRepository : EventsRepository {
         streams.merge(event.stream, mutableListOf(event)) { a, b -> a + b }
     }
 
-    override fun loadStream(stream: StreamId): List<DomainEvent<*>> {
-        return streams[stream] ?: emptyList()
-    }
+    override fun query(query: EventsQuery): JavaStream<DomainEvent<*>> = query
+        .streams
+        .flatMap { streams[it] ?: emptyList() }
+        .sortedBy { it.timestamp }
+        .stream()
 }

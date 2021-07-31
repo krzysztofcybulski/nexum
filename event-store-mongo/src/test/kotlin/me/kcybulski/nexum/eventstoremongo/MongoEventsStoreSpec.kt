@@ -5,9 +5,11 @@ import io.kotest.extensions.testcontainers.perSpec
 import io.kotest.matchers.shouldBe
 import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.StreamId
+import me.kcybulski.nexum.eventstore.reader.EventsQuery.Companion.query
 import org.testcontainers.containers.MongoDBContainer
 import org.testcontainers.utility.DockerImageName.parse
 import java.time.Instant.now
+import kotlin.streams.toList
 
 class MongoEventsStoreSpec : BehaviorSpec({
 
@@ -19,11 +21,14 @@ class MongoEventsStoreSpec : BehaviorSpec({
             connectionString = mongoDB.replicaSetUrl
             database = "test"
         }
-        val stream = StreamId("1")
+        val streamId = StreamId("1")
         `when`("Event is saved") {
-            repository.save(DomainEvent("Hello", stream, now()))
+            repository.save(DomainEvent("Hello", streamId, now()))
             then("Event should be in loaded stream") {
-                repository.loadStream(stream).map(DomainEvent<*>::payload) shouldBe listOf("Hello")
+                repository
+                    .query(query { stream(streamId) })
+                    .map(DomainEvent<*>::payload)
+                    .toList() shouldBe listOf("Hello")
             }
         }
     }

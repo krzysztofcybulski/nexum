@@ -6,8 +6,11 @@ import me.kcybulski.nexum.eventstore.events.EventsRepository
 import me.kcybulski.nexum.eventstore.events.NoStream
 import me.kcybulski.nexum.eventstore.events.Stream
 import me.kcybulski.nexum.eventstore.events.StreamId
+import me.kcybulski.nexum.eventstore.reader.EventsQuery
+import org.litote.kmongo.`in`
+import org.litote.kmongo.ascendingSort
 import org.litote.kmongo.ensureIndex
-import org.litote.kmongo.eq
+import java.util.stream.Stream as JavaStream
 
 internal class MongoEventsRepository(
     private val collection: MongoCollection<MongoDomainEvent<*>>
@@ -21,10 +24,12 @@ internal class MongoEventsRepository(
         collection.insertOne(event.toMongo())
     }
 
-    override fun loadStream(stream: StreamId): List<DomainEvent<*>> = collection
-        .find(MongoDomainEvent<*>::stream eq stream.raw)
+    override fun query(query: EventsQuery): JavaStream<DomainEvent<*>> = collection
+        .find(MongoDomainEvent<*>::stream `in` query.streamNames())
+        .ascendingSort(MongoDomainEvent<*>::timestamp)
         .map(MongoDomainEvent<*>::toDomain)
         .toList()
+        .stream()
 }
 
 private fun <T> DomainEvent<T>.toMongo() = MongoDomainEvent(
@@ -43,3 +48,5 @@ private fun Stream.toMongo() = when (this) {
     is StreamId -> raw
     is NoStream -> null
 }
+
+private fun EventsQuery.streamNames() = streams.map(StreamId::raw)

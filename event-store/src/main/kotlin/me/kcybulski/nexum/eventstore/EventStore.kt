@@ -9,16 +9,20 @@ import me.kcybulski.nexum.eventstore.events.Stream
 import me.kcybulski.nexum.eventstore.events.StreamId
 import me.kcybulski.nexum.eventstore.handlers.HandlersRepository
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration
-import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration.Companion.configuration
+import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration.Companion.publishConfiguration
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfigurationBuilder
 import me.kcybulski.nexum.eventstore.publishing.PublishingError
 import me.kcybulski.nexum.eventstore.publishing.PublishingUncheckedException
+import me.kcybulski.nexum.eventstore.reader.EventsQuery.Companion.query
+import me.kcybulski.nexum.eventstore.reader.EventsQueryBuilder
 import me.kcybulski.nexum.eventstore.subscribing.AllTypesHandler
 import me.kcybulski.nexum.eventstore.subscribing.BasicSubscription
 import me.kcybulski.nexum.eventstore.subscribing.EventHandler
 import me.kcybulski.nexum.eventstore.subscribing.EventTypeHandler
 import me.kcybulski.nexum.eventstore.subscribing.Subscription
+import java.util.stream.Collectors.toList
 import kotlin.reflect.KClass
+import java.util.stream.Stream as JavaStream
 
 class EventStore(
     private val handlersRepository: HandlersRepository,
@@ -39,7 +43,7 @@ class EventStore(
         configurationBuilder: PublishEventConfigurationBuilder.() -> Unit = {}
     ) {
         append(event, stream)
-        fireEventHandlers(event, configuration(configurationBuilder))
+        fireEventHandlers(event, publishConfiguration(configurationBuilder))
     }
 
     fun <T> append(event: T, stream: Stream = NoStream) {
@@ -50,10 +54,15 @@ class EventStore(
         handlersRepository.unregister(handler)
     }
 
-    fun <T : AggregateRoot<T>> load(stream: StreamId, factory: (AggregatesHolder) -> T): T =
-        factory(aggregatesHolder).applyAllEvents(eventsManager.loadStream(stream))
+    fun <T : AggregateRoot<T>> load(streamId: StreamId, factory: (AggregatesHolder) -> T): T =
+        query { stream(streamId) }
+            .let(eventsManager::read)
+            .let(factory(aggregatesHolder)::applyAllEvents)
 
     fun <T : AggregateRoot<T>> new(factory: (AggregatesHolder) -> T): T = factory(aggregatesHolder)
+
+    fun read(queryBuilder: EventsQueryBuilder.() -> Unit): JavaStream<DomainEvent<*>> =
+        eventsManager.read(query(queryBuilder))
 
     private fun <T : Any> fireEventHandlers(event: T, configuration: PublishEventConfiguration) = handlersRepository
         .findHandlers(event::class)
@@ -71,5 +80,5 @@ private fun <T : Any> T.tryOrElse(func: (T) -> Unit, errorHandler: (PublishingEr
     errorHandler(PublishingUncheckedException(e))
 }
 
-private fun <T : AggregateRoot<T>> T.applyAllEvents(events: List<DomainEvent<*>>): T =
-    events.fold(this) { agg, event -> agg.apply(event.payload) }
+private fun <T : AggregateRoot<T>> T.applyAllEvents(events: JavaStream<DomainEvent<*>>): T =
+    events.collect(toList()).fold(this) { agg, event -> agg.apply(event.payload) }

@@ -5,7 +5,7 @@ data class PublishEventConfiguration(
 ) {
 
     companion object {
-        fun configuration(configuration: PublishEventConfigurationBuilder.() -> Unit = {}) =
+        fun publishConfiguration(configuration: PublishEventConfigurationBuilder.() -> Unit = {}) =
             PublishEventConfigurationBuilder()
                 .apply(configuration)
                 .build()
