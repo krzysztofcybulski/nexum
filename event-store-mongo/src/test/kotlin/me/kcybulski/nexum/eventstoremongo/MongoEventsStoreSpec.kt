@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.extensions.testcontainers.perSpec
 import io.kotest.matchers.shouldBe
 import me.kcybulski.nexum.eventstore.events.DomainEvent
+import me.kcybulski.nexum.eventstore.events.EventId
 import me.kcybulski.nexum.eventstore.events.StreamId
 import me.kcybulski.nexum.eventstore.reader.EventsQuery.Companion.query
 import org.testcontainers.containers.MongoDBContainer
@@ -23,7 +24,7 @@ class MongoEventsStoreSpec : BehaviorSpec({
         }
         val streamId = StreamId("1")
         `when`("Event is saved") {
-            repository.save(DomainEvent("Hello", streamId, now()))
+            repository.save(DomainEvent(EventId("1"), "Hello", streamId, now()))
             then("Event should be in loaded stream") {
                 repository
                     .query(query { stream(streamId) })

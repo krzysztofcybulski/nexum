@@ -2,6 +2,7 @@ package me.kcybulski.nexum.eventstoremongo
 
 import com.mongodb.client.MongoCollection
 import me.kcybulski.nexum.eventstore.events.DomainEvent
+import me.kcybulski.nexum.eventstore.events.EventId
 import me.kcybulski.nexum.eventstore.events.EventsRepository
 import me.kcybulski.nexum.eventstore.events.NoStream
 import me.kcybulski.nexum.eventstore.events.Stream
@@ -33,12 +34,14 @@ internal class MongoEventsRepository(
 }
 
 private fun <T> DomainEvent<T>.toMongo() = MongoDomainEvent(
+    id = id.raw,
     payload = payload,
     stream = stream.toMongo(),
     timestamp = timestamp
 )
 
 private fun <T> MongoDomainEvent<T>.toDomain() = DomainEvent(
+    id = EventId(id),
     payload = payload,
     stream = stream?.let(::StreamId) ?: NoStream,
     timestamp = timestamp
