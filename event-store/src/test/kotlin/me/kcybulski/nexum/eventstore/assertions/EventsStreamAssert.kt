@@ -7,6 +7,7 @@ class EventsStreamAssert<T>(
 ) {
 
     fun hasEvent(verifier: (T) -> Boolean): EventsStreamAssert<T> {
+        eventStream.hasNext() shouldBe true
         verifier(eventStream.next()) shouldBe true
         return this
     }

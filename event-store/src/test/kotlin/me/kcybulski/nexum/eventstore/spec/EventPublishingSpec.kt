@@ -20,7 +20,7 @@ class EventPublishingSpec : BehaviorSpec({
     given("An event") {
         val event = ProductAddedEvent("Milk")
         `when`("Event is published") {
-            eventStore.publish(event)
+            eventStore.publishAsync(event)
             then("Subscriber has been called") {
                 testSubscriber
                     .assertStream(ProductAddedEvent::class.java)

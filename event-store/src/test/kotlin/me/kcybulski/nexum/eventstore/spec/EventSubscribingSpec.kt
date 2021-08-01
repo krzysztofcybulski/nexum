@@ -18,7 +18,7 @@ class EventSubscribingSpec : BehaviorSpec({
     given("Event subscription (1)") {
         eventStore.subscribe(ProductAddedEvent::class, testSubscriber::onEvent)
         `when`("Event is published") {
-            eventStore.publish(ProductAddedEvent("Milk"))
+            eventStore.publishAsync(ProductAddedEvent("Milk"))
             then("Subscriber has been called") {
                 testSubscriber
                     .assertStream(ProductAddedEvent::class.java)
@@ -33,7 +33,7 @@ class EventSubscribingSpec : BehaviorSpec({
         `when`("Unsubscribed") {
             subscription.unsubscribe()
             and("Published event") {
-                eventStore.publish(ProductAddedEvent("Milk"))
+                eventStore.publishAsync(ProductAddedEvent("Milk"))
                 then("Subscriber has not been called") {
                     testSubscriber
                         .assertStream(ProductAddedEvent::class.java)
@@ -46,7 +46,7 @@ class EventSubscribingSpec : BehaviorSpec({
     given("Event subscription (3)") {
         eventStore.subscribe(ProductAddedEvent::class) { throw RuntimeException() }
         `when`("Event is published") {
-            eventStore.publish(ProductAddedEvent("Milk"))
+            eventStore.publishAsync(ProductAddedEvent("Milk"))
             then("Error has been eaten") {
                 testSubscriber
                     .assertStream(ProductAddedEvent::class.java)
@@ -59,7 +59,7 @@ class EventSubscribingSpec : BehaviorSpec({
         eventStore.subscribe(ProductAddedEvent::class) { throw RuntimeException() }
         `when`("Event is published") {
             var errorMessage = "None"
-            eventStore.publish(ProductAddedEvent("Milk")) {
+            eventStore.publishAsync(ProductAddedEvent("Milk")) {
                 onError { errorMessage = "Milk not added" }
             }
             then("Event handler has been called") {
@@ -71,7 +71,7 @@ class EventSubscribingSpec : BehaviorSpec({
     given("All subscription") {
         eventStore.subscribeAll(testSubscriber::onEvent)
         `when`("Event is published") {
-            eventStore.publish(ProductAddedEvent("Milk"))
+            eventStore.publishAsync(ProductAddedEvent("Milk"))
             then("Event handler has been called") {
                 testSubscriber
                     .assertStream(ProductAddedEvent::class.java)

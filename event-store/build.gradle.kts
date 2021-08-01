@@ -2,7 +2,7 @@ plugins {
     `java-library`
     `maven-publish`
     signing
-    kotlin("jvm") version "1.5.0-RC"
+    kotlin("jvm") version "1.5.21"
 }
 
 group = "me.kcybulski.nexum"
@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:4.4.3")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.4.3")

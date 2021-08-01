@@ -5,7 +5,7 @@ import kotlin.reflect.KClass
 
 interface HandlersRepository {
 
-    fun <T: Any> findHandlers(event: KClass<T>): List<(T: Any) -> Unit>
+    fun <T : Any> findHandlers(event: KClass<T>): List<suspend (T: Any) -> Unit>
     fun <T> register(handler: EventHandler<T>): EventHandler<T>
     fun <T> unregister(handler: EventHandler<T>)
     fun unregisterAll()
