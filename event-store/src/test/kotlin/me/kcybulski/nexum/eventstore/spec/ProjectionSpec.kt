@@ -3,6 +3,8 @@ package me.kcybulski.nexum.eventstore.spec
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import me.kcybulski.nexum.eventstore.EventStore
+import me.kcybulski.nexum.eventstore.data.MoneyDeposited
+import me.kcybulski.nexum.eventstore.data.MoneyWithdrawn
 import me.kcybulski.nexum.eventstore.events.StreamId
 import me.kcybulski.nexum.eventstore.inmemory.InMemoryEventStore
 
@@ -27,6 +29,3 @@ class ProjectionSpec : BehaviorSpec({
         }
     }
 })
-
-data class MoneyDeposited(val amount: Int)
-data class MoneyWithdrawn(val amount: Int)

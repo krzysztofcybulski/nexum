@@ -1,8 +1,6 @@
 package me.kcybulski.nexum.eventstore.aggregates
 
-abstract class AggregateRoot<A : AggregateRoot<A>>(
-    private val strategy: AggregateStrategy = ManuallyStoreEvents
-) {
+abstract class AggregateRoot<A : AggregateRoot<A>> {
 
     internal val unpublishedEvents: MutableList<Any> = mutableListOf()
 
