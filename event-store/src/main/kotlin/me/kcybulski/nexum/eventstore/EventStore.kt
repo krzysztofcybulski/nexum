@@ -25,6 +25,7 @@ import me.kcybulski.nexum.eventstore.subscribing.EventTypeHandler
 import me.kcybulski.nexum.eventstore.subscribing.Subscription
 import java.util.stream.Collectors.toList
 import kotlin.reflect.KClass
+import kotlin.streams.toList
 import java.util.stream.Stream as JavaStream
 
 class EventStore(
@@ -73,6 +74,9 @@ class EventStore(
 
     fun read(queryBuilder: EventsQueryBuilder.() -> Unit): JavaStream<DomainEvent<*>> =
         eventsManager.read(query(queryBuilder))
+
+    fun <T> project(init: T, queryBuilder: EventsQueryBuilder.() -> Unit, reduce: (T, Any) -> T): T =
+        read(queryBuilder).toList().mapNotNull(DomainEvent<*>::payload).fold(init, reduce)
 
     private suspend fun <T : Any> fireEventHandlers(event: T, configuration: PublishEventConfiguration) =
         coroutineScope {
