@@ -32,4 +32,17 @@ class AggregateSpec : BehaviorSpec({
             }
         }
     }
+
+    given("Stored order with apple") {
+        val stream = StreamId("order-with-apple")
+        eventStore.with(stream, ::OrderAggregate) {
+            addProduct("Apple")
+        }
+        `when`("Loaded order") {
+            val orderWithApple = eventStore.load(stream, ::OrderAggregate)
+            then("Apple has been added") {
+                "Apple" shouldBeIn orderWithApple.products
+            }
+        }
+    }
 })

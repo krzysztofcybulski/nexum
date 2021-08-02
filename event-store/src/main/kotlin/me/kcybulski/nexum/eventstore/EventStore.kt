@@ -72,6 +72,11 @@ class EventStore(
         .onEach { eventsFacade.save(it, streamId) }
         .apply { clear() }
 
+    fun <T : AggregateRoot<T>> with(streamId: StreamId, factory: () -> T, action: T.() -> Unit) =
+        load(streamId, factory)
+            .also { action(it) }
+            .also { store(it, streamId) }
+
     fun read(queryBuilder: EventsQueryBuilder.() -> Unit): JavaStream<DomainEvent<*>> =
         eventsFacade.read(query(queryBuilder))
 
