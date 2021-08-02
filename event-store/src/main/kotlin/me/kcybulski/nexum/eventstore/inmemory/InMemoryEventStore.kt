@@ -1,8 +1,8 @@
 package me.kcybulski.nexum.eventstore.inmemory
 
 import me.kcybulski.nexum.eventstore.EventStore
-import me.kcybulski.nexum.eventstore.events.EventsFactory
 import me.kcybulski.nexum.eventstore.events.EventsFacade
+import me.kcybulski.nexum.eventstore.events.EventsFactory
 
 object InMemoryEventStore {
 
@@ -10,8 +10,7 @@ object InMemoryEventStore {
         val eventsManager = EventsFacade(InMemoryEventsRepository(), EventsFactory())
         return EventStore(
             InMemoryHandlersRepository(),
-            eventsManager,
-            InMemoryAggregatesHolder(eventsManager)
+            eventsManager
         )
     }
 }

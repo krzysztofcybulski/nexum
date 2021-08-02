@@ -1,12 +1,10 @@
 package me.kcybulski.nexum.eventstore.data
 
 import me.kcybulski.nexum.eventstore.aggregates.AggregateRoot
-import me.kcybulski.nexum.eventstore.aggregates.AggregatesHolder
 
 data class OrderAggregate(
-    override val aggregatesHolder: AggregatesHolder,
     val products: List<String> = emptyList()
-) : AggregateRoot<OrderAggregate> {
+) : AggregateRoot<OrderAggregate>() {
 
     fun addProduct(product: String) {
         event(ProductAddedEvent(product))

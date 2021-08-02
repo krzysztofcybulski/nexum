@@ -4,7 +4,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.kcybulski.nexum.eventstore.aggregates.AggregateRoot
-import me.kcybulski.nexum.eventstore.aggregates.AggregatesHolder
 import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.EventsFacade
 import me.kcybulski.nexum.eventstore.events.NoStream
@@ -30,8 +29,7 @@ import java.util.stream.Stream as JavaStream
 
 class EventStore(
     private val handlersRepository: HandlersRepository,
-    private val eventsManager: EventsFacade,
-    private val aggregatesHolder: AggregatesHolder,
+    private val eventsFacade: EventsFacade
 ) {
     fun <T : Any> subscribe(event: KClass<T>, handler: suspend (T) -> Unit): Subscription<T> =
         EventTypeHandler(event, handler)
@@ -58,22 +56,24 @@ class EventStore(
     ) = runBlocking { publishAsync(event, stream, configurationBuilder) }
 
     fun <T> append(event: T, stream: Stream = NoStream) {
-        eventsManager.save(event, stream)
+        eventsFacade.save(event, stream)
     }
 
     fun <T> unsubscribe(handler: EventHandler<T>) {
         handlersRepository.unregister(handler)
     }
 
-    fun <T : AggregateRoot<T>> load(streamId: StreamId, factory: (AggregatesHolder) -> T): T =
+    fun <T : AggregateRoot<T>> load(streamId: StreamId, factory: () -> T): T =
         query { stream(streamId) }
-            .let(eventsManager::read)
-            .let(factory(aggregatesHolder)::applyAllEvents)
+            .let(eventsFacade::read)
+            .let(factory()::applyAllEvents)
 
-    fun <T : AggregateRoot<T>> new(factory: (AggregatesHolder) -> T): T = factory(aggregatesHolder)
+    fun <T : AggregateRoot<T>> store(aggregate: T, streamId: StreamId) = aggregate.unpublishedEvents
+        .onEach { eventsFacade.save(it, streamId) }
+        .apply { clear() }
 
     fun read(queryBuilder: EventsQueryBuilder.() -> Unit): JavaStream<DomainEvent<*>> =
-        eventsManager.read(query(queryBuilder))
+        eventsFacade.read(query(queryBuilder))
 
     fun <T> project(init: T, queryBuilder: EventsQueryBuilder.() -> Unit, reduce: (T, Any) -> T): T =
         read(queryBuilder).toList().mapNotNull(DomainEvent<*>::payload).fold(init, reduce)

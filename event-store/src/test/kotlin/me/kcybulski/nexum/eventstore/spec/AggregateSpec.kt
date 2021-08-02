@@ -22,9 +22,9 @@ class AggregateSpec : BehaviorSpec({
 
     given("Stored order with milk") {
         val stream = StreamId("order-with-milk")
-        eventStore.new(::OrderAggregate)
+        OrderAggregate()
             .also { it.addProduct("Milk") }
-            .store(stream)
+            .also { eventStore.store(it, stream) }
         `when`("Loaded order") {
             val orderWithMilk = eventStore.load(stream, ::OrderAggregate)
             then("Milk has been added") {

@@ -1,19 +1,15 @@
 package me.kcybulski.nexum.eventstore.aggregates
 
-import me.kcybulski.nexum.eventstore.events.Stream
+abstract class AggregateRoot<A : AggregateRoot<A>>(
+    private val strategy: AggregateStrategy = ManuallyStoreEvents
+) {
 
-interface AggregateRoot<A : AggregateRoot<A>> {
+    internal val unpublishedEvents: MutableList<Any> = mutableListOf()
 
-    val aggregatesHolder: AggregatesHolder
-
-    fun <T> apply(event: T): A
+    abstract fun <T> apply(event: T): A
 
     fun <T> event(event: T) {
-        aggregatesHolder.addEvent(this, event)
+        unpublishedEvents.add(event as Any)
         apply(event)
-    }
-
-    fun store(stream: Stream) {
-        aggregatesHolder.store(this, stream)
     }
 }
