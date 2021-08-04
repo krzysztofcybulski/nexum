@@ -6,8 +6,8 @@ abstract class AggregateRoot<A : AggregateRoot<A>> {
 
     abstract fun <T> apply(event: T): A
 
-    fun <T> event(event: T) {
+    fun <T> event(event: T): A {
         unpublishedEvents.add(event as Any)
-        apply(event)
+        return apply(event)
     }
 }
