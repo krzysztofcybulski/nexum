@@ -21,7 +21,7 @@ internal class MongoEventsRepository(
         collection.ensureIndex(MongoDomainEvent<*>::stream)
     }
 
-    override fun <T> save(event: DomainEvent<T>) {
+    override fun <T : Any> save(event: DomainEvent<T>) {
         collection.insertOne(event.toMongo())
     }
 
@@ -33,14 +33,14 @@ internal class MongoEventsRepository(
         .stream()
 }
 
-private fun <T> DomainEvent<T>.toMongo() = MongoDomainEvent(
+private fun <T : Any> DomainEvent<T>.toMongo() = MongoDomainEvent(
     id = id.raw,
     payload = payload,
     stream = stream.toMongo(),
     timestamp = timestamp
 )
 
-private fun <T> MongoDomainEvent<T>.toDomain() = DomainEvent(
+private fun <T : Any> MongoDomainEvent<T>.toDomain() = DomainEvent(
     id = EventId(id),
     payload = payload,
     stream = stream?.let(::StreamId) ?: NoStream,

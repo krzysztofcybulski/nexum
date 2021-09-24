@@ -7,7 +7,7 @@ class EventsFactory(
     private val clock: Clock = Clock.systemUTC()
 ) {
 
-    fun <T> create(payload: T, stream: Stream = NoStream): DomainEvent<T> = DomainEvent(
+    fun <T : Any> create(payload: T, stream: Stream = NoStream): DomainEvent<T> = DomainEvent(
         id = EventId(randomUUID().toString()),
         payload = payload,
         stream = stream,

@@ -1,10 +1,10 @@
 package me.kcybulski.nexum.eventstore.inmemory
 
-import me.kcybulski.nexum.eventstore.handlers.HandlersRepository
+import me.kcybulski.nexum.eventstore.handlers.HandlersRegistry
 import me.kcybulski.nexum.eventstore.subscribing.EventHandler
 import kotlin.reflect.KClass
 
-internal class InMemoryHandlersRepository : HandlersRepository {
+internal class InMemoryHandlersRegistry : HandlersRegistry {
 
     private val handlers: MutableList<EventHandler<*>> = mutableListOf()
 

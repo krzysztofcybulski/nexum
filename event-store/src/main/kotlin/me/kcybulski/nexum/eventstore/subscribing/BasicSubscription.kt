@@ -1,12 +1,10 @@
 package me.kcybulski.nexum.eventstore.subscribing
 
-import me.kcybulski.nexum.eventstore.EventStore
-
 internal class BasicSubscription<T>(
     private val handler: EventHandler<T>,
-    private val eventStore: EventStore
+    private val unsubscribe: (EventHandler<T>) -> Unit
 ) : Subscription<T> {
     override fun unsubscribe() {
-        eventStore.unsubscribe(handler)
+        unsubscribe(handler)
     }
 }

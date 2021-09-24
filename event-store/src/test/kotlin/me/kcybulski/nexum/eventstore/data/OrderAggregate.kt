@@ -1,5 +1,6 @@
 package me.kcybulski.nexum.eventstore.data
 
+import me.kcybulski.nexum.eventstore.aggregates.AggregateFactory
 import me.kcybulski.nexum.eventstore.aggregates.AggregateRoot
 
 data class OrderAggregate(
@@ -16,3 +17,11 @@ data class OrderAggregate(
             else -> this
         }
 }
+
+class OrderAggregateFactory : AggregateFactory<OrderAggregate, OrderCreated> {
+    override fun onCreate(event: OrderCreated): OrderAggregate = OrderAggregate(
+        listOf(event.firstProduct)
+    )
+}
+
+data class OrderCreated(val firstProduct: String)

@@ -5,44 +5,33 @@ import io.kotest.matchers.collections.shouldBeIn
 import me.kcybulski.nexum.eventstore.EventStore
 import me.kcybulski.nexum.eventstore.TestSubscriber
 import me.kcybulski.nexum.eventstore.data.OrderAggregate
+import me.kcybulski.nexum.eventstore.data.OrderAggregateFactory
+import me.kcybulski.nexum.eventstore.data.OrderCreated
 import me.kcybulski.nexum.eventstore.data.ProductAddedEvent
 import me.kcybulski.nexum.eventstore.events.StreamId
 import me.kcybulski.nexum.eventstore.inmemory.InMemoryEventStore
 
-@Deprecated("Use API v2 with event creators")
-class AggregateSpec : BehaviorSpec({
+class AggregateV2Spec : BehaviorSpec({
 
     val testSubscriber = TestSubscriber()
     val eventStore: EventStore = InMemoryEventStore.create()
 
     eventStore.subscribe(ProductAddedEvent::class, testSubscriber::onEvent)
+    eventStore.register(OrderAggregateFactory())
 
     afterTest {
         testSubscriber.reset()
     }
 
-    given("Stored order with milk") {
+    given("Created order with milk") {
         val stream = StreamId("order-with-milk")
-        OrderAggregate()
-            .also { it.addProduct("Milk") }
-            .also { eventStore.store(it, stream) }
+        val order = eventStore
+            .new<OrderAggregate, OrderCreated>(OrderCreated("Milk"))!!
+        eventStore.store(order, stream)
         `when`("Loaded order") {
-            val orderWithMilk = eventStore.load(stream, ::OrderAggregate)
+            val orderWithMilk = eventStore.load<OrderAggregate, OrderCreated>(stream)!!
             then("Milk has been added") {
                 "Milk" shouldBeIn orderWithMilk.products
-            }
-        }
-    }
-
-    given("Stored order with apple") {
-        val stream = StreamId("order-with-apple")
-        eventStore.with(stream, ::OrderAggregate) {
-            addProduct("Apple")
-        }
-        `when`("Loaded order") {
-            val orderWithApple = eventStore.load(stream, ::OrderAggregate)
-            then("Apple has been added") {
-                "Apple" shouldBeIn orderWithApple.products
             }
         }
     }

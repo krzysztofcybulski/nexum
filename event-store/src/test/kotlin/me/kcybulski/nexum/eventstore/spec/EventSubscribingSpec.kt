@@ -2,17 +2,21 @@ package me.kcybulski.nexum.eventstore.spec
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import me.kcybulski.nexum.eventstore.EventStore
 import me.kcybulski.nexum.eventstore.TestSubscriber
 import me.kcybulski.nexum.eventstore.data.ProductAddedEvent
-import me.kcybulski.nexum.eventstore.inmemory.InMemoryEventStore
+import me.kcybulski.nexum.eventstore.inmemory.InMemoryEventsRepository
+import me.kcybulski.nexum.eventstore.inmemory.InMemoryHandlersRegistry
 
 class EventSubscribingSpec : BehaviorSpec({
     val testSubscriber = TestSubscriber()
-    val eventStore = InMemoryEventStore.create()
+
+    val handlersRepository = InMemoryHandlersRegistry()
+    val eventStore = EventStore.create(InMemoryEventsRepository(), handlersRepository)
 
     afterTest {
         testSubscriber.reset()
-        eventStore.unsubscribeAll()
+        handlersRepository.unregisterAll()
     }
 
     given("Event subscription (1)") {

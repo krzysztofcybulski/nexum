@@ -14,7 +14,6 @@ class EventAsyncSubscribingSpec : BehaviorSpec({
 
     afterTest {
         testSubscriber.reset()
-        eventStore.unsubscribeAll()
     }
 
     given("Async event subscriptions") {

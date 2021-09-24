@@ -10,7 +10,7 @@ internal class InMemoryEventsRepository : EventsRepository {
 
     private val streams: MutableMap<Stream, List<DomainEvent<*>>> = mutableMapOf()
 
-    override fun <T> save(event: DomainEvent<T>) {
+    override fun <T : Any> save(event: DomainEvent<T>) {
         streams.merge(event.stream, mutableListOf(event)) { a, b -> a + b }
     }
 

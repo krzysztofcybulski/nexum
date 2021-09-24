@@ -1,105 +1,91 @@
 package me.kcybulski.nexum.eventstore
 
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import me.kcybulski.nexum.eventstore.aggregates.AggregateFactory
 import me.kcybulski.nexum.eventstore.aggregates.AggregateRoot
+import me.kcybulski.nexum.eventstore.aggregates.AggregatesFacade
+import me.kcybulski.nexum.eventstore.aggregates.FactoriesRegistry
 import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.EventsFacade
+import me.kcybulski.nexum.eventstore.events.EventsFactory
+import me.kcybulski.nexum.eventstore.events.EventsRepository
 import me.kcybulski.nexum.eventstore.events.NoStream
 import me.kcybulski.nexum.eventstore.events.Stream
 import me.kcybulski.nexum.eventstore.events.StreamId
-import me.kcybulski.nexum.eventstore.handlers.HandlersRepository
-import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration
+import me.kcybulski.nexum.eventstore.handlers.HandlersRegistry
+import me.kcybulski.nexum.eventstore.inmemory.InMemoryFactoriesRegistry
+import me.kcybulski.nexum.eventstore.inmemory.InMemoryHandlersRegistry
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration.Companion.publishConfiguration
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfigurationBuilder
-import me.kcybulski.nexum.eventstore.publishing.PublishingError
-import me.kcybulski.nexum.eventstore.publishing.PublishingUncheckedException
+import me.kcybulski.nexum.eventstore.publishing.PublishingFacade
 import me.kcybulski.nexum.eventstore.reader.EventsQuery.Companion.query
 import me.kcybulski.nexum.eventstore.reader.EventsQueryBuilder
-import me.kcybulski.nexum.eventstore.subscribing.AllTypesHandler
-import me.kcybulski.nexum.eventstore.subscribing.BasicSubscription
 import me.kcybulski.nexum.eventstore.subscribing.EventHandler
-import me.kcybulski.nexum.eventstore.subscribing.EventTypeHandler
 import me.kcybulski.nexum.eventstore.subscribing.Subscription
-import java.util.stream.Collectors.toList
+import me.kcybulski.nexum.eventstore.subscribing.SubscriptionFacade
 import kotlin.reflect.KClass
-import kotlin.streams.toList
 import java.util.stream.Stream as JavaStream
 
 class EventStore(
-    private val handlersRepository: HandlersRepository,
+    private val subscriptions: SubscriptionFacade,
+    private val publishing: PublishingFacade,
+    @PublishedApi internal val aggregates: AggregatesFacade,
     private val eventsFacade: EventsFacade
 ) {
-    fun <T : Any> subscribe(event: KClass<T>, handler: suspend (T) -> Unit): Subscription<T> =
-        EventTypeHandler(event, handler)
-            .let(handlersRepository::register)
-            .let { BasicSubscription(it, this) }
+    fun <T : Any> subscribe(event: KClass<T>, handler: suspend (T) -> Unit): Subscription<T> = subscriptions
+        .subscribe(event, handler)
 
-    fun subscribeAll(handler: suspend (Any) -> Unit): Subscription<Any> = AllTypesHandler(handler)
-        .let(handlersRepository::register)
-        .let { BasicSubscription(it, this) }
+    fun subscribeAll(handler: suspend (Any) -> Unit): Subscription<Any> = subscriptions
+        .subscribeAll(handler)
 
     suspend fun <T : Any> publishAsync(
         event: T,
         stream: Stream = NoStream,
         configurationBuilder: PublishEventConfigurationBuilder.() -> Unit = {}
-    ) {
-        append(event, stream)
-        fireEventHandlers(event, publishConfiguration(configurationBuilder))
-    }
+    ) = publishing.publishAsync(event, stream, publishConfiguration(configurationBuilder))
 
     fun <T : Any> publish(
         event: T,
         stream: Stream = NoStream,
         configurationBuilder: PublishEventConfigurationBuilder.() -> Unit = {}
-    ) = runBlocking { publishAsync(event, stream, configurationBuilder) }
+    ) = publishing.publish(event, stream, publishConfiguration(configurationBuilder))
 
-    fun <T> append(event: T, stream: Stream = NoStream) {
-        eventsFacade.save(event, stream)
-    }
+    fun <T : Any> append(event: T, stream: Stream = NoStream) = publishing.append(event, stream)
 
-    fun <T> unsubscribe(handler: EventHandler<T>) {
-        handlersRepository.unregister(handler)
-    }
+    fun <T> unsubscribe(handler: EventHandler<T>) = subscriptions.unsubscribe(handler)
 
-    fun <T : AggregateRoot<T>> load(streamId: StreamId, factory: () -> T): T =
-        query { stream(streamId) }
-            .let(eventsFacade::read)
-            .let(factory()::applyAllEvents)
+    inline fun <T : AggregateRoot<T>, reified E : Any> register(factory: AggregateFactory<T, E>) = aggregates
+        .register(E::class, factory)
 
-    fun <T : AggregateRoot<T>> store(aggregate: T, streamId: StreamId) = aggregate.unpublishedEvents
-        .onEach { eventsFacade.save(it, streamId) }
-        .apply { clear() }
+    inline fun <T : AggregateRoot<T>, reified E : Any> new(event: E): T? = aggregates.new<T, E>(E::class, event)
+
+    fun <T : AggregateRoot<T>> store(aggregate: T, streamId: StreamId) = aggregates.store(aggregate, streamId)
+
+    fun <T : AggregateRoot<T>, E : Any> load(streamId: StreamId): T? = aggregates.load<T, E>(streamId)
+
+    fun <T : AggregateRoot<T>> load(streamId: StreamId, factory: () -> T): T = aggregates.load(streamId, factory)
 
     fun <T : AggregateRoot<T>> with(streamId: StreamId, factory: () -> T, action: T.() -> Unit) =
-        load(streamId, factory)
-            .also { action(it) }
-            .also { store(it, streamId) }
+        aggregates.with(streamId, factory, action)
 
     fun read(queryBuilder: EventsQueryBuilder.() -> Unit): JavaStream<DomainEvent<*>> =
         eventsFacade.read(query(queryBuilder))
 
     fun <T> project(init: T, queryBuilder: EventsQueryBuilder.() -> Unit, reduce: (T, Any) -> T): T =
-        read(queryBuilder).toList().mapNotNull(DomainEvent<*>::payload).fold(init, reduce)
+        eventsFacade.project(init, query(queryBuilder), reduce)
 
-    private suspend fun <T : Any> fireEventHandlers(event: T, configuration: PublishEventConfiguration) =
-        coroutineScope {
-            handlersRepository
-                .findHandlers(event::class)
-                .forEach { handler -> launch { event.tryOrElse(handler) { configuration.errorHandler(it) } } }
+    companion object {
+        fun create(
+            eventsRepository: EventsRepository,
+            handlersRegistry: HandlersRegistry = InMemoryHandlersRegistry(),
+            factoriesRegistry: FactoriesRegistry = InMemoryFactoriesRegistry()
+        ): EventStore {
+            val eventsFacade = EventsFacade(eventsRepository, EventsFactory())
+            return EventStore(
+                subscriptions = SubscriptionFacade(handlersRegistry),
+                publishing = PublishingFacade(handlersRegistry, eventsFacade),
+                aggregates = AggregatesFacade(factoriesRegistry, eventsFacade),
+                eventsFacade = eventsFacade
+            )
         }
-
-    internal fun unsubscribeAll() {
-        handlersRepository.unregisterAll()
     }
 }
-
-private suspend fun <T : Any> T.tryOrElse(func: suspend (T) -> Unit, errorHandler: (PublishingError) -> Unit) = try {
-    func(this)
-} catch (e: RuntimeException) {
-    errorHandler(PublishingUncheckedException(e))
-}
-
-private fun <T : AggregateRoot<T>> T.applyAllEvents(events: JavaStream<DomainEvent<*>>): T =
-    events.collect(toList()).fold(this) { agg, event -> agg.apply(event.payload) }

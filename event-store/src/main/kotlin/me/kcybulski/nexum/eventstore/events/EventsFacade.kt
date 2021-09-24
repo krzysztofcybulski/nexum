@@ -1,6 +1,7 @@
 package me.kcybulski.nexum.eventstore.events
 
 import me.kcybulski.nexum.eventstore.reader.EventsQuery
+import kotlin.streams.toList
 import java.util.stream.Stream as JavaStream
 
 class EventsFacade(
@@ -8,11 +9,14 @@ class EventsFacade(
     private val eventsFactory: EventsFactory
 ) {
 
-    fun <T> save(payload: T, stream: Stream) = eventsFactory
+    fun <T : Any> save(payload: T, stream: Stream) = eventsFactory
         .create(payload, stream)
         .let(eventsRepository::save)
 
     fun read(query: EventsQuery): JavaStream<DomainEvent<*>> = eventsRepository
         .query(query)
+
+    fun <T> project(init: T, query: EventsQuery, reduce: (T, Any) -> T): T =
+        read(query).toList().mapNotNull(DomainEvent<*>::payload).fold(init, reduce)
 
 }

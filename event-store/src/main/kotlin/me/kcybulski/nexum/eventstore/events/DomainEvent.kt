@@ -2,7 +2,7 @@ package me.kcybulski.nexum.eventstore.events
 
 import java.time.Instant
 
-data class DomainEvent<T>(
+data class DomainEvent<T : Any>(
     val id: EventId,
     val payload: T,
     val stream: Stream = NoStream,

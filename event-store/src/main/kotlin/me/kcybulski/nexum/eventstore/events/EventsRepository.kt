@@ -5,7 +5,7 @@ import java.util.stream.Stream as JavaStream
 
 interface EventsRepository {
 
-    fun <T> save(event: DomainEvent<T>)
+    fun <T : Any> save(event: DomainEvent<T>)
     fun query(query: EventsQuery): JavaStream<DomainEvent<*>>
 
 }
