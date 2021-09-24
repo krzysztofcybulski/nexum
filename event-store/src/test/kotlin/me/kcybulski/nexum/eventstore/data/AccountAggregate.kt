@@ -15,7 +15,7 @@ data class AccountAggregate(
         event(MoneyWithdrawn(amount))
     }
 
-    override fun <T> apply(event: T): AccountAggregate =
+    override fun <T> applyEvent(event: T): AccountAggregate =
         when (event) {
             is MoneyDeposited -> copy(balance = balance + event.amount)
             is MoneyWithdrawn -> copy(balance = balance - event.amount)

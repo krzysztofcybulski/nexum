@@ -11,7 +11,7 @@ data class OrderAggregate(
         event(ProductAddedEvent(product))
     }
 
-    override fun <T> apply(event: T): OrderAggregate =
+    override fun <T> applyEvent(event: T): OrderAggregate =
         when (event) {
             is ProductAddedEvent -> copy(products = products + event.name)
             else -> this

@@ -62,10 +62,11 @@ class EventStore(
 
     fun <T : AggregateRoot<T>, E : Any> load(streamId: StreamId): T? = aggregates.load<T, E>(streamId)
 
-    fun <T : AggregateRoot<T>> load(streamId: StreamId, factory: () -> T): T = aggregates.load(streamId, factory)
+    fun <T : AggregateRoot<T>, E : Any> with(streamId: StreamId, modifier: T.() -> Unit): T? = aggregates
+        .with<T, E>(streamId, modifier)
 
-    fun <T : AggregateRoot<T>> with(streamId: StreamId, factory: () -> T, action: T.() -> Unit) =
-        aggregates.with(streamId, factory, action)
+    fun <T : AggregateRoot<T>, E : Any> with(streamId: StreamId, creator: E, modifier: T.() -> Unit): T? = aggregates
+        .with(streamId, creator, modifier)
 
     fun read(queryBuilder: EventsQueryBuilder.() -> Unit): JavaStream<DomainEvent<*>> =
         eventsFacade.read(query(queryBuilder))

@@ -4,10 +4,10 @@ abstract class AggregateRoot<A : AggregateRoot<A>> {
 
     internal val unpublishedEvents: MutableList<Any> = mutableListOf()
 
-    abstract fun <T> apply(event: T): A
+    abstract fun <T> applyEvent(event: T): A
 
     fun <T> event(event: T): A {
         unpublishedEvents.add(event as Any)
-        return apply(event)
+        return applyEvent(event)
     }
 }

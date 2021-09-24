@@ -4,7 +4,6 @@ import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.EventsFacade
 import me.kcybulski.nexum.eventstore.events.StreamId
 import me.kcybulski.nexum.eventstore.reader.EventsQuery.Companion.query
-import java.util.stream.Collectors
 import kotlin.reflect.KClass
 import kotlin.streams.toList
 import java.util.stream.Stream as JavaStream
@@ -14,9 +13,10 @@ class AggregatesFacade(
     private val eventsFacade: EventsFacade
 ) {
 
-    fun <T : AggregateRoot<T>> store(aggregate: T, streamId: StreamId) = aggregate.unpublishedEvents
+    fun <T : AggregateRoot<T>> store(aggregate: T, streamId: StreamId): T = aggregate.unpublishedEvents
         .onEach { eventsFacade.save(it, streamId) }
         .apply { clear() }
+        .let { aggregate }
 
     fun <T : AggregateRoot<T>, E : Any> register(eventType: KClass<E>, factory: AggregateFactory<T, E>) =
         factoriesRegistry
@@ -29,27 +29,17 @@ class AggregatesFacade(
     fun <T : AggregateRoot<T>, E : Any> load(streamId: StreamId): T? =
         query { stream(streamId) }
             .let(eventsFacade::read)
-            .toList()
-            .takeIf { it.isNotEmpty() }
-            ?.let { list ->
-                val first: E = list.first().payload as E
-                return new<T, E>(first::class as KClass<E>, first)
-                    ?.let { list.fold(it) { agg, event -> agg.apply(event) } }
-            }
+            .applyEvents<T, E> { event: E -> new(event::class as KClass<E>, event) }
 
-    @Deprecated("Use methods with aggregate factories")
-    fun <T : AggregateRoot<T>> load(streamId: StreamId, factory: () -> T): T =
-        query { stream(streamId) }
-            .let(eventsFacade::read)
-            .let(factory()::applyAllEvents)
+    fun <T : AggregateRoot<T>, E : Any> with(streamId: StreamId, modifier: (T) -> Unit): T? =
+        load<T, E>(streamId)?.apply(modifier)?.let { store(it, streamId) }
 
-    @Deprecated("Use methods with aggregate factories")
-    fun <T : AggregateRoot<T>> with(streamId: StreamId, factory: () -> T, action: T.() -> Unit) =
-        load(streamId, factory)
-            .also { action(it) }
-            .also { store(it, streamId) }
-
+    fun <T : AggregateRoot<T>, E : Any> with(streamId: StreamId, creator: E, modifier: (T) -> Unit): T? =
+        new<T, E>(creator::class as KClass<E>, creator)?.apply(modifier)?.let { store(it, streamId) }
 }
 
-private fun <T : AggregateRoot<T>> T.applyAllEvents(events: JavaStream<DomainEvent<*>>): T =
-    events.collect(Collectors.toList()).fold(this) { agg, event -> agg.apply(event.payload) }
+private fun <T : AggregateRoot<T>, E : Any> JavaStream<DomainEvent<*>>.applyEvents(factory: (E) -> T?): T? =
+    map { it.payload }
+        .toList()
+        .takeIf { it.isNotEmpty() }
+        ?.run { fold(factory(first() as E)) { agg, event -> agg?.applyEvent(event) } }
