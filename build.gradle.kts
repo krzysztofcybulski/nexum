@@ -1,5 +1,5 @@
 group = "me.kcybulski.nexum"
-version = "1.1.1"
+version = "1.2.0"
 
 plugins {
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
