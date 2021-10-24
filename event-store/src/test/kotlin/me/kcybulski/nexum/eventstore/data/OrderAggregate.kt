@@ -3,17 +3,17 @@ package me.kcybulski.nexum.eventstore.data
 import me.kcybulski.nexum.eventstore.aggregates.AggregateFactory
 import me.kcybulski.nexum.eventstore.aggregates.AggregateRoot
 
-data class OrderAggregate(
+class OrderAggregate(
     val products: List<String> = emptyList()
 ) : AggregateRoot<OrderAggregate>() {
 
-    fun addProduct(product: String) {
-        event(ProductAddedEvent(product))
-    }
+    fun addProduct(product: String) = event(ProductAddedEvent(product))
+
+    fun addProducts(vararg products: String) = products.fold(this) { agg, product -> agg.event(ProductAddedEvent(product)) }
 
     override fun <T> applyEvent(event: T): OrderAggregate =
         when (event) {
-            is ProductAddedEvent -> copy(products = products + event.name)
+            is ProductAddedEvent -> OrderAggregate(products = products + event.name)
             else -> this
         }
 }

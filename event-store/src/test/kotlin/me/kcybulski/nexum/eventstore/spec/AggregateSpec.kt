@@ -66,4 +66,20 @@ class AggregateSpec : BehaviorSpec({
             }
         }
     }
+
+    given("Stored order with egg, milk and apple") {
+        val stream = StreamId("order-with-egg")
+        val order = eventStore
+            .new<OrderAggregate, OrderCreated>(OrderCreated("Egg"))!!
+            .addProducts("Milk", "Apple")
+        `when`("Added milk and apple") {
+            eventStore.store(order, stream)
+            then("Apple and milk has been added") {
+                val loadedOrder = eventStore.load<OrderAggregate, OrderCreated>(stream)!!
+                "Apple" shouldBeIn loadedOrder.products
+                "Milk" shouldBeIn loadedOrder.products
+                "Egg" shouldBeIn loadedOrder.products
+            }
+        }
+    }
 })

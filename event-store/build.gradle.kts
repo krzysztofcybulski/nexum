@@ -28,7 +28,7 @@ publishing {
         create<MavenPublication>("mavenJava") {
             groupId = "me.kcybulski.nexum"
             artifactId = "event-store"
-            version = "1.2.0"
+            version = "1.4.0"
             from(components["java"])
             pom {
                 name.set("Nexum")

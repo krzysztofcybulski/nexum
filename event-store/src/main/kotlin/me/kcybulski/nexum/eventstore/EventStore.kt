@@ -81,10 +81,11 @@ class EventStore(
             factoriesRegistry: FactoriesRegistry = InMemoryFactoriesRegistry()
         ): EventStore {
             val eventsFacade = EventsFacade(eventsRepository, EventsFactory())
+            val publishingFacade = PublishingFacade(handlersRegistry, eventsFacade)
             return EventStore(
                 subscriptions = SubscriptionFacade(handlersRegistry),
-                publishing = PublishingFacade(handlersRegistry, eventsFacade),
-                aggregates = AggregatesFacade(factoriesRegistry, eventsFacade),
+                publishing = publishingFacade,
+                aggregates = AggregatesFacade(factoriesRegistry, eventsFacade, publishingFacade),
                 eventsFacade = eventsFacade
             )
         }

@@ -3,6 +3,9 @@ package me.kcybulski.nexum.eventstore.aggregates
 import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.EventsFacade
 import me.kcybulski.nexum.eventstore.events.StreamId
+import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration
+import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration.Companion.publishConfiguration
+import me.kcybulski.nexum.eventstore.publishing.PublishingFacade
 import me.kcybulski.nexum.eventstore.reader.EventsQuery.Companion.query
 import kotlin.reflect.KClass
 import kotlin.streams.toList
@@ -10,11 +13,12 @@ import java.util.stream.Stream as JavaStream
 
 class AggregatesFacade(
     private val factoriesRegistry: FactoriesRegistry,
-    private val eventsFacade: EventsFacade
+    private val eventsFacade: EventsFacade,
+    private val publishingFacade: PublishingFacade
 ) {
 
     fun <T : AggregateRoot<T>> store(aggregate: T, streamId: StreamId): T = aggregate.unpublishedEvents
-        .onEach { eventsFacade.save(it, streamId) }
+        .onEach { publishingFacade.publish(it, streamId, publishConfiguration()) }
         .apply { clear() }
         .let { aggregate }
 
