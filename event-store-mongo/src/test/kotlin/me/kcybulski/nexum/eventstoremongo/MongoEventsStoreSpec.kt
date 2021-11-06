@@ -5,8 +5,8 @@ import io.kotest.extensions.testcontainers.perSpec
 import io.kotest.matchers.shouldBe
 import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.EventId
+import me.kcybulski.nexum.eventstore.events.EventsQuery.Companion.query
 import me.kcybulski.nexum.eventstore.events.StreamId
-import me.kcybulski.nexum.eventstore.reader.EventsQuery.Companion.query
 import org.testcontainers.containers.MongoDBContainer
 import org.testcontainers.utility.DockerImageName.parse
 import java.time.Instant.now

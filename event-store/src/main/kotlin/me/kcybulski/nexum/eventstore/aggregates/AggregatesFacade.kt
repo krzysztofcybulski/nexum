@@ -2,11 +2,10 @@ package me.kcybulski.nexum.eventstore.aggregates
 
 import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.EventsFacade
+import me.kcybulski.nexum.eventstore.events.EventsQuery.Companion.query
 import me.kcybulski.nexum.eventstore.events.StreamId
-import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration.Companion.publishConfiguration
 import me.kcybulski.nexum.eventstore.publishing.PublishingFacade
-import me.kcybulski.nexum.eventstore.reader.EventsQuery.Companion.query
 import kotlin.reflect.KClass
 import kotlin.streams.toList
 import java.util.stream.Stream as JavaStream

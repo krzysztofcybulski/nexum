@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.platform.TargetPlatformVersion.NoVersion.description
+
 plugins {
     `java-library`
     `maven-publish`
@@ -28,7 +30,7 @@ publishing {
         create<MavenPublication>("mavenJava") {
             groupId = "me.kcybulski.nexum"
             artifactId = "event-store"
-            version = "1.4.0"
+            version = "1.5.0"
             from(components["java"])
             pom {
                 name.set("Nexum")

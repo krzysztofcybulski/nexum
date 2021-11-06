@@ -7,6 +7,8 @@ import me.kcybulski.nexum.eventstore.aggregates.FactoriesRegistry
 import me.kcybulski.nexum.eventstore.events.DomainEvent
 import me.kcybulski.nexum.eventstore.events.EventsFacade
 import me.kcybulski.nexum.eventstore.events.EventsFactory
+import me.kcybulski.nexum.eventstore.events.EventsQuery.Companion.query
+import me.kcybulski.nexum.eventstore.events.EventsQueryBuilder
 import me.kcybulski.nexum.eventstore.events.EventsRepository
 import me.kcybulski.nexum.eventstore.events.NoStream
 import me.kcybulski.nexum.eventstore.events.Stream
@@ -17,8 +19,6 @@ import me.kcybulski.nexum.eventstore.inmemory.InMemoryHandlersRegistry
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfiguration.Companion.publishConfiguration
 import me.kcybulski.nexum.eventstore.publishing.PublishEventConfigurationBuilder
 import me.kcybulski.nexum.eventstore.publishing.PublishingFacade
-import me.kcybulski.nexum.eventstore.reader.EventsQuery.Companion.query
-import me.kcybulski.nexum.eventstore.reader.EventsQueryBuilder
 import me.kcybulski.nexum.eventstore.subscribing.EventHandler
 import me.kcybulski.nexum.eventstore.subscribing.Subscription
 import me.kcybulski.nexum.eventstore.subscribing.SubscriptionFacade

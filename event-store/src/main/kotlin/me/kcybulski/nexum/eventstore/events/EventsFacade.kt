@@ -1,6 +1,5 @@
 package me.kcybulski.nexum.eventstore.events
 
-import me.kcybulski.nexum.eventstore.reader.EventsQuery
 import kotlin.streams.toList
 import java.util.stream.Stream as JavaStream
 
